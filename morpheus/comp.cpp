@@ -183,7 +183,7 @@ static PyObject * add_new(PyObject *self, PyObject* args)
     for(int i = 0; i < nk; i++) {
           k_list.push_back((long*) PyArray_DATA(PyList_GET_ITEM(k, i)));
           v_list.push_back((double*) PyArray_DATA(PyList_GET_ITEM(v, i)));
-          vd_list.push_back(PyInt_AsLong(PyList_GET_ITEM(vd, i)));
+          vd_list.push_back(PyLong_AsLong(PyList_GET_ITEM(vd, i)));
     }
 
     add_new<int, double, long>(ns, nk, dw, k_list, v_list, vd_list, (double*)PyArray_DATA(res));
@@ -272,7 +272,7 @@ static PyObject * expand_add(PyObject *self, PyObject* args)
     for(int i = 0; i < nk; i++) {
           k_list.push_back((long*) PyArray_DATA(PyList_GET_ITEM(k, i)));
           r_list.push_back((double*) PyArray_DATA(PyList_GET_ITEM(r, i)));
-          nr_list.push_back(PyInt_AsLong(PyList_GET_ITEM(nr, i)));
+          nr_list.push_back(PyLong_AsLong(PyList_GET_ITEM(nr, i)));
     }
 
     expand_add<int, double, long>(ns, nk, k_list, r_list, nr_list, (double*)PyArray_DATA(res));
@@ -302,7 +302,7 @@ static PyObject * group(PyObject *self, PyObject* args)
     for(int i = 0; i < nk; i++) {
           k_list.push_back((long*) PyArray_DATA(PyList_GET_ITEM(k, i)));
           res_list.push_back((double*) PyArray_DATA(PyList_GET_ITEM(res, i)));
-          nr_list.push_back((long) PyInt_AsLong(PyList_GET_ITEM(nr, i)));
+          nr_list.push_back((long) PyLong_AsLong(PyList_GET_ITEM(nr, i)));
     }
 
     group<int, double, long>(ns, nk, nw, k_list, nr_list, (double*) PyArray_DATA(w), res_list);
@@ -369,19 +369,40 @@ static PyMethodDef comp_methods[] = {
 	{NULL,		NULL}		/* sentinel */
 };
 
-extern void initcomp(void)
+// changed from only Py_InitModule("comp", comp_methods);
+static struct PyModuleDef comp = {
+        PyModuleDef_HEAD_INIT,
+        "comp", /* name of module */
+        "",          /* module documentation, may be NULL */
+        -1,          /* size of per-interpreter state of the module, or -1 if the module keeps state in global variables. */
+        comp_methods
+    };
+
+PyMODINIT_FUNC PyInit_comp()
 {
-	PyImport_AddModule("comp");
-	Py_InitModule("comp", comp_methods);
+	// PyImport_AddModule("comp");
+
+    // // changed from only Py_InitModule("comp", comp_methods);
+    // static struct PyModuleDef comp =
+    // {
+    //     PyModuleDef_HEAD_INIT,
+    //     "comp", /* name of module */
+    //     "",          /* module documentation, may be NULL */
+    //     -1,          /* size of per-interpreter state of the module, or -1 if the module keeps state in global variables. */
+    //     comp_methods
+    // };
+	return PyModule_Create(&comp);
 }
 
 int main(int argc, char **argv)
 {
-	Py_SetProgramName(argv[0]);
+    // changed from Py_SetProgramName(argv[0])
+    wchar_t *program = Py_DecodeLocale(argv[0], NULL); 
+    Py_SetProgramName(program);
 
 	Py_Initialize();
 
-	initcomp();
+	PyInit_comp();
 
 	Py_Exit(0);
 }
